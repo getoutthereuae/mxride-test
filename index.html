@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<title>Mx Ride · Track Session</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: #0a0a0a;
+    color: #0a0a0a;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    height: 100dvh;
+    background: #ffffff;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .stripe-top { height: 4px; background: repeating-linear-gradient(90deg, #facc15 0 14px, #0a0a0a 14px 28px); flex-shrink: 0; }
+  .screen { flex: 1; padding: 22px 22px 28px; overflow-y: auto; -webkit-overflow-scrolling: touch; display: none; flex-direction: column; }
+  .screen.active { display: flex; }
+  .display { font-family: 'Barlow Condensed', 'Oswald', sans-serif; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; }
+  .eyebrow { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #6b6b6b; font-weight: 500; }
+  .header-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; flex-shrink: 0; }
+  .logo { display: inline-flex; align-items: center; gap: 8px; }
+  .logo-mark { width: 32px; height: 32px; background: #0a0a0a; color: #facc15; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 14px; transform: skewX(-8deg); }
+  .logo-mark span { transform: skewX(8deg); }
+  .logo-text { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 15px; letter-spacing: 0.16em; text-transform: uppercase; color: #0a0a0a; }
+  .step-label { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #0a0a0a; font-weight: 500; }
+  h1.title { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #0a0a0a; margin-bottom: 6px; line-height: 1; }
+  .subtitle { font-size: 13px; color: #6b6b6b; line-height: 1.5; margin-bottom: 22px; }
+  .price-banner { text-align: center; padding: 22px 0; border-top: 1px solid #0a0a0a; border-bottom: 1px solid #0a0a0a; position: relative; margin-bottom: 18px; }
+  .price-banner::before { content: ""; position: absolute; top: -1px; left: 0; width: 48px; height: 3px; background: #facc15; }
+  .price { font-family: 'Barlow Condensed', sans-serif; font-size: 56px; font-weight: 600; letter-spacing: 0.02em; color: #0a0a0a; line-height: 1; }
+  .price-label { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: #6b6b6b; margin-bottom: 6px; }
+  .row { display: flex; justify-content: space-between; padding: 11px 0; font-size: 14px; border-bottom: 0.5px solid #e5e5e5; }
+  .row:last-child { border-bottom: none; }
+  .row .label { color: #6b6b6b; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; }
+  .row .val { font-weight: 500; color: #0a0a0a; font-variant-numeric: tabular-nums; }
+  .row.total { border-top: 1px solid #0a0a0a; padding-top: 14px; margin-top: 4px; }
+  .row.total .label { color: #0a0a0a; }
+  .row.total .val { font-size: 16px; }
+  .btn { width: 100%; padding: 16px; border-radius: 6px; font-size: 14px; font-weight: 600; border: 1.5px solid #0a0a0a; background: #ffffff; cursor: pointer; color: #0a0a0a; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Barlow Condensed', sans-serif; margin-bottom: 10px; transition: transform 0.05s ease; }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: #facc15; color: #0a0a0a; }
+  .btn-dark { background: #0a0a0a; color: #facc15; }
+  .btn-danger { background: #fef2f2; color: #991b1b; border-color: #fca5a5; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .lang-toggle { display: flex; gap: 4px; }
+  .lang-toggle span { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 8px; font-weight: 500; }
+  .lang-toggle .active { background: #0a0a0a; color: #facc15; border-radius: 2px; }
+  .waiver-box { background: #f5f5f5; border-radius: 4px; padding: 14px; height: 220px; overflow-y: auto; font-size: 12px; color: #555; line-height: 1.7; margin-bottom: 16px; border-left: 3px solid #facc15; -webkit-overflow-scrolling: touch; }
+  .waiver-box p { margin-bottom: 10px; }
+  .sig-canvas-wrap { position: relative; height: 140px; border: 2px dashed #0a0a0a; border-radius: 4px; margin-bottom: 16px; background: #fffef5; overflow: hidden; }
+  #sigCanvas { width: 100%; height: 100%; display: block; touch-action: none; }
+  .sig-clear { position: absolute; bottom: 6px; right: 10px; font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #6b6b6b; background: transparent; border: none; cursor: pointer; padding: 4px 6px; font-weight: 500; }
+  .sig-placeholder { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: #c4c4c4; pointer-events: none; }
+  .sig-placeholder.hidden { display: none; }
+  .field-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #6b6b6b; margin-bottom: 5px; font-weight: 500; }
+  .field-input { width: 100%; background: #f5f5f5; border-radius: 4px; padding: 13px 14px; font-size: 15px; margin-bottom: 14px; border: none; border-left: 2px solid #facc15; color: #0a0a0a; font-family: inherit; -webkit-appearance: none; appearance: none; outline: none; }
+  .field-input:focus { background: #eeeeee; border-left-color: #eab308; }
+  .field-input.emergency { border-left-color: #ef4444; background: #fef2f2; }
+  .field-input.emergency:focus { background: #fee2e2; }
+  .field-label.emergency { color: #991b1b; }
+  .live-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-shrink: 0; }
+  .live-dot { display: inline-flex; align-items: center; gap: 8px; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: #0a0a0a; font-weight: 500; }
+  .live-dot .pulse { width: 9px; height: 9px; border-radius: 50%; background: #22c55e; animation: pulse 1.4s infinite; }
+  .live-dot.searching .pulse { background: #facc15; }
+  .live-dot.error .pulse { background: #ef4444; animation: none; }
+  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.85); } }
+  .map-wrap { background: #0a0a0a; border-radius: 6px; aspect-ratio: 1.2; position: relative; overflow: hidden; margin-bottom: 14px; border: 1px solid #facc15; flex-shrink: 0; }
+  #liveMap { width: 100%; height: 100%; display: block; }
+  .lap-pill { position: absolute; top: 10px; right: 12px; background: rgba(250,204,21,0.18); border: 1px solid #facc15; padding: 4px 10px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #facc15; font-weight: 600; }
+  .gps-status { position: absolute; bottom: 10px; left: 12px; font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #facc15; font-weight: 500; }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; flex-shrink: 0; }
+  .stat-tile { background: #0a0a0a; border-radius: 4px; padding: 12px 8px; text-align: center; }
+  .stat-tile .l { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #facc15; font-weight: 500; }
+  .stat-tile .v { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 600; color: #ffffff; font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .summary-card { background: #0a0a0a; border-radius: 6px; padding: 18px 20px; color: white; margin-bottom: 16px; }
+  .summary-card .row .label { color: #facc15; }
+  .summary-card .row .val { color: white; font-size: 16px; }
+  .summary-card .row { border-bottom-color: #2a2a2a; }
+  .checker-icon { width: 60px; height: 60px; background: #facc15; display: flex; align-items: center; justify-content: center; margin: 8px auto 14px; transform: rotate(-4deg); border-radius: 4px; }
+  .checker-icon svg { transform: rotate(4deg); }
+  .step-pill { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #6b6b6b; font-weight: 500; }
+  .processing { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 16px; }
+  .spinner { width: 38px; height: 38px; border: 3px solid #f5f5f5; border-top-color: #0a0a0a; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(10,10,10,0.78); display: none; align-items: flex-end; justify-content: center; z-index: 100; }
+  .modal-backdrop.show { display: flex; }
+  .modal { background: white; width: 100%; max-width: 480px; border-radius: 14px 14px 0 0; padding: 24px 22px 32px; }
+  .modal h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px; }
+  .modal p { font-size: 13px; color: #6b6b6b; margin-bottom: 16px; line-height: 1.5; }
+  .pay-method { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-radius: 6px; background: #0a0a0a; color: white; margin-bottom: 8px; cursor: pointer; }
+  .pay-method.gpay { background: #fff; color: #0a0a0a; border: 1px solid #d4d4d4; }
+  .pay-method:active { transform: scale(0.99); }
+  .pay-method-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #0a0a0a; color: white; padding: 12px 18px; border-radius: 4px; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; z-index: 200; opacity: 0; transition: opacity 0.2s; pointer-events: none; border-left: 3px solid #facc15; }
+  .toast.show { opacity: 1; }
+  .sos-modal .modal { border-top: 4px solid #ef4444; }
+  .sos-modal h2 { color: #991b1b; }
+  .sos-confirm { background: #ef4444; color: white; border: 1.5px solid #ef4444; }
+  .gps-error-banner { background: #fef2f2; border-left: 3px solid #ef4444; padding: 12px 14px; margin-bottom: 14px; font-size: 12px; color: #991b1b; line-height: 1.5; }
+  .demo-banner { background: #fef9c3; border-left: 3px solid #facc15; padding: 10px 14px; margin-bottom: 14px; font-size: 11px; color: #713f12; line-height: 1.5; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.04em; }
+  .demo-banner strong { font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="stripe-top"></div>
+
+  <!-- Screen 1: Pay -->
+  <section class="screen active" id="screenPay">
+    <div class="header-bar">
+      <div class="logo"><div class="logo-mark"><span>MX</span></div><span class="logo-text">Mx Ride</span></div>
+      <span class="eyebrow">Day pass</span>
+    </div>
+    <div class="demo-banner"><strong>Prototype mode.</strong> Payment is simulated. GPS, signature, and tracking are real.</div>
+    <div class="price-banner">
+      <div class="price-label">Track session</div>
+      <div class="price">AED 150</div>
+    </div>
+    <div style="margin-bottom: 18px;">
+      <div class="row"><span class="label">Subtotal</span><span class="val">150.00</span></div>
+      <div class="row"><span class="label">VAT 5%</span><span class="val">7.50</span></div>
+      <div class="row total"><span class="label">Total AED</span><span class="val">157.50</span></div>
+    </div>
+    <button class="btn btn-dark" onclick="openPayModal('apple')">  Pay</button>
+    <button class="btn" onclick="openPayModal('gpay')">G  Google Pay</button>
+    <p class="eyebrow" style="text-align: center; margin-top: 12px; font-size: 10px;">Secured by Stripe</p>
+  </section>
+
+  <!-- Screen 2: Processing -->
+  <section class="screen" id="screenProcessing">
+    <div class="processing">
+      <div class="spinner"></div>
+      <div class="display" style="font-size: 16px; color: #0a0a0a;">Processing payment</div>
+      <div style="font-size: 12px; color: #6b6b6b;">This is simulated for the prototype</div>
+    </div>
+  </section>
+
+  <!-- Screen 3: Waiver -->
+  <section class="screen" id="screenWaiver">
+    <div class="header-bar">
+      <span class="step-label">Step 02 / Waiver</span>
+      <div class="lang-toggle">
+        <span class="active">EN</span>
+        <span>AR</span>
+      </div>
+    </div>
+    <h1 class="title">Liability waiver</h1>
+    <p class="subtitle">Read carefully, then sign below to continue.</p>
+    <div class="waiver-box">
+      <p>I, the undersigned, acknowledge that motocross is an inherently dangerous activity involving substantial risk of serious injury, permanent disability, or death.</p>
+      <p>I voluntarily agree to ride at my own risk and hereby release Mx Ride, its owners, operators, staff, instructors, and affiliates from any and all liability arising from my use of the facility, including but not limited to negligence on the part of any released party.</p>
+      <p>I confirm that I am physically fit to ride, hold appropriate insurance coverage, and will wear all required safety equipment at all times while on track — including helmet, boots, gloves, chest protector, and goggles.</p>
+      <p>I agree to follow all track rules, marshal instructions, and posted speed and direction guidance. I understand that violation of these rules may result in immediate removal from the facility without refund.</p>
+      <p>I consent to the collection of GPS location data during my session for the purposes of safety monitoring and emergency response.</p>
+      <p>By signing below I confirm that I have read, understood, and agreed to all of the above.</p>
+    </div>
+    <div class="field-label">Sign below</div>
+    <div class="sig-canvas-wrap">
+      <canvas id="sigCanvas"></canvas>
+      <span class="sig-placeholder" id="sigPlaceholder">Tap and draw</span>
+      <button class="sig-clear" onclick="clearSignature()">Clear</button>
+    </div>
+    <button class="btn btn-primary" onclick="submitWaiver()" id="waiverBtn" disabled>Agree & continue</button>
+  </section>
+
+  <!-- Screen 4: Rider info -->
+  <section class="screen" id="screenInfo">
+    <div class="header-bar">
+      <span class="step-label">Step 03 / Rider</span>
+    </div>
+    <h1 class="title">Your details</h1>
+    <p class="subtitle">For your session record and emergency contact.</p>
+    <div class="field-label">Full name</div>
+    <input class="field-input" id="riderName" type="text" placeholder="George Aramouni" autocomplete="name">
+    <div class="field-label">Phone</div>
+    <input class="field-input" id="riderPhone" type="tel" placeholder="+971 50 000 0000" autocomplete="tel">
+    <div class="field-label">Bike</div>
+    <input class="field-input" id="riderBike" type="text" placeholder="KTM 350 SX-F">
+    <div class="field-label emergency">Emergency contact</div>
+    <input class="field-input emergency" id="riderEmergency" type="text" placeholder="Name & phone">
+    <button class="btn btn-primary" onclick="submitInfo()" style="margin-top: 6px;">Start session</button>
+  </section>
+
+  <!-- Screen 5: Active session -->
+  <section class="screen" id="screenRide">
+    <div class="live-bar">
+      <span class="live-dot searching" id="liveDot"><span class="pulse"></span><span id="liveText">Acquiring GPS</span></span>
+      <span class="eyebrow">Session #1284</span>
+    </div>
+    <div class="map-wrap">
+      <canvas id="liveMap"></canvas>
+      <div class="lap-pill" id="lapPill">Lap 0</div>
+      <div class="gps-status" id="gpsStatus">Waiting…</div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-tile"><div class="l">Time</div><div class="v" id="statTime">0:00</div></div>
+      <div class="stat-tile"><div class="l">Laps</div><div class="v" id="statLaps">0</div></div>
+      <div class="stat-tile"><div class="l">km/h</div><div class="v" id="statSpeed">0</div></div>
+    </div>
+    <button class="btn btn-primary" onclick="endSession()">End session</button>
+    <button class="btn btn-danger" onclick="triggerSOS()">!  I need help</button>
+  </section>
+
+  <!-- Screen 6: Summary -->
+  <section class="screen" id="screenSummary">
+    <div style="text-align: center; margin-top: 20px;">
+      <div class="checker-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      </div>
+      <h1 class="title" style="text-align: center; font-size: 32px;">Checkered flag</h1>
+      <p class="subtitle" style="text-align: center;">Nice ride, <span id="summaryName">George</span></p>
+    </div>
+    <div class="summary-card">
+      <div class="row"><span class="label">Duration</span><span class="val" id="sumDuration">0:00</span></div>
+      <div class="row"><span class="label">Laps</span><span class="val" id="sumLaps">0</span></div>
+      <div class="row"><span class="label">Best lap</span><span class="val" id="sumBest">—</span></div>
+      <div class="row"><span class="label">Distance</span><span class="val" id="sumDist">0.0 km</span></div>
+      <div class="row"><span class="label">Top speed</span><span class="val" id="sumTop">0 km/h</span></div>
+    </div>
+    <button class="btn" onclick="resetApp()">New session</button>
+  </section>
+</div>
+
+<!-- Pay modal -->
+<div class="modal-backdrop" id="payModal">
+  <div class="modal">
+    <h2 id="payModalTitle">Apple Pay</h2>
+    <p>Confirm payment of <strong>AED 157.50</strong> to Mx Ride · Track Session.</p>
+    <div class="pay-method" id="payMethodPreview">
+      <span class="pay-method-name">Pay AED 157.50</span>
+      <span style="font-size: 12px; opacity: 0.7;">Visa ••• 4242</span>
+    </div>
+    <button class="btn btn-dark" onclick="confirmPay()" style="margin-top: 12px;">Confirm payment</button>
+    <button class="btn" onclick="closePayModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- SOS modal -->
+<div class="modal-backdrop sos-modal" id="sosModal">
+  <div class="modal">
+    <h2>Send SOS alert?</h2>
+    <p>This will alert track staff with your last known GPS location and emergency contact details. Only use if you genuinely need help.</p>
+    <button class="btn sos-confirm" onclick="confirmSOS()">Yes, send SOS</button>
+    <button class="btn" onclick="closeSOS()">Cancel</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============== STATE ==============
+const state = {
+  payMethod: null,
+  signature: null,
+  rider: { name: '', phone: '', bike: '', emergency: '' },
+  session: {
+    startTime: null,
+    points: [],
+    laps: 0,
+    bestLap: null,
+    lapStart: null,
+    topSpeed: 0,
+    distance: 0,
+    timer: null,
+    watchId: null,
+    wakeLock: null,
+  }
+};
+
+// ============== NAVIGATION ==============
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function toast(msg, ms = 1800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), ms);
+}
+
+// ============== PAY ==============
+function openPayModal(method) {
+  state.payMethod = method;
+  document.getElementById('payModalTitle').textContent = method === 'apple' ? 'Apple Pay' : 'Google Pay';
+  document.getElementById('payModal').classList.add('show');
+}
+function closePayModal() {
+  document.getElementById('payModal').classList.remove('show');
+}
+function confirmPay() {
+  closePayModal();
+  showScreen('screenProcessing');
+  setTimeout(() => {
+    toast('Payment successful');
+    showScreen('screenWaiver');
+    initSignature();
+  }, 1400);
+}
+
+// ============== WAIVER (signature pad) ==============
+let sigCtx, sigDrawing = false, sigHasInk = false;
+
+function initSignature() {
+  const canvas = document.getElementById('sigCanvas');
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  sigCtx = canvas.getContext('2d');
+  sigCtx.scale(dpr, dpr);
+  sigCtx.strokeStyle = '#0a0a0a';
+  sigCtx.lineWidth = 2.2;
+  sigCtx.lineCap = 'round';
+  sigCtx.lineJoin = 'round';
+
+  const getPos = (e) => {
+    const r = canvas.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return { x: t.clientX - r.left, y: t.clientY - r.top };
+  };
+  const start = (e) => {
+    e.preventDefault();
+    sigDrawing = true;
+    if (!sigHasInk) {
+      sigHasInk = true;
+      document.getElementById('sigPlaceholder').classList.add('hidden');
+      document.getElementById('waiverBtn').disabled = false;
+    }
+    const p = getPos(e);
+    sigCtx.beginPath();
+    sigCtx.moveTo(p.x, p.y);
+  };
+  const move = (e) => {
+    if (!sigDrawing) return;
+    e.preventDefault();
+    const p = getPos(e);
+    sigCtx.lineTo(p.x, p.y);
+    sigCtx.stroke();
+  };
+  const end = () => { sigDrawing = false; };
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', start, { passive: false });
+  canvas.addEventListener('touchmove', move, { passive: false });
+  canvas.addEventListener('touchend', end);
+}
+
+function clearSignature() {
+  if (!sigCtx) return;
+  const canvas = document.getElementById('sigCanvas');
+  sigCtx.clearRect(0, 0, canvas.width, canvas.height);
+  sigHasInk = false;
+  document.getElementById('sigPlaceholder').classList.remove('hidden');
+  document.getElementById('waiverBtn').disabled = true;
+}
+
+function submitWaiver() {
+  state.signature = document.getElementById('sigCanvas').toDataURL('image/png');
+  toast('Waiver signed');
+  showScreen('screenInfo');
+}
+
+// ============== RIDER INFO ==============
+function submitInfo() {
+  state.rider.name = document.getElementById('riderName').value || 'Rider';
+  state.rider.phone = document.getElementById('riderPhone').value;
+  state.rider.bike = document.getElementById('riderBike').value || 'Bike';
+  state.rider.emergency = document.getElementById('riderEmergency').value;
+  if (!state.rider.name.trim() || state.rider.name === 'Rider') {
+    toast('Please enter your name');
+    return;
+  }
+  showScreen('screenRide');
+  startSession();
+}
+
+// ============== SESSION (GPS + map + lap) ==============
+function startSession() {
+  state.session.startTime = Date.now();
+  state.session.lapStart = Date.now();
+  state.session.points = [];
+  state.session.laps = 0;
+  state.session.distance = 0;
+  state.session.topSpeed = 0;
+
+  // Wake lock
+  if ('wakeLock' in navigator) {
+    navigator.wakeLock.request('screen').then(lock => {
+      state.session.wakeLock = lock;
+    }).catch(() => {});
+  }
+
+  // Timer
+  state.session.timer = setInterval(updateTimer, 250);
+
+  // GPS
+  if (navigator.geolocation) {
+    state.session.watchId = navigator.geolocation.watchPosition(
+      onGPS,
+      onGPSError,
+      { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
+    );
+  } else {
+    onGPSError({ code: 0, message: 'No geolocation' });
+  }
+
+  initMap();
+}
+
+function updateTimer() {
+  if (!state.session.startTime) return;
+  const elapsed = Math.floor((Date.now() - state.session.startTime) / 1000);
+  const m = Math.floor(elapsed / 60);
+  const s = elapsed % 60;
+  document.getElementById('statTime').textContent = `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function haversine(a, b) {
+  const R = 6371000;
+  const toRad = (x) => x * Math.PI / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLon = toRad(b.lon - a.lon);
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const h = Math.sin(dLat/2)**2 + Math.sin(dLon/2)**2 * Math.cos(lat1) * Math.cos(lat2);
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+function onGPS(pos) {
+  const dot = document.getElementById('liveDot');
+  dot.classList.remove('searching', 'error');
+  document.getElementById('liveText').textContent = `Live · ±${Math.round(pos.coords.accuracy)}m`;
+  document.getElementById('gpsStatus').textContent = `GPS lock · ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+
+  const point = {
+    lat: pos.coords.latitude,
+    lon: pos.coords.longitude,
+    t: Date.now(),
+    speed: pos.coords.speed || 0
+  };
+
+  // Distance
+  if (state.session.points.length > 0) {
+    const last = state.session.points[state.session.points.length - 1];
+    const d = haversine(last, point);
+    if (d < 500) state.session.distance += d;
+  }
+
+  state.session.points.push(point);
+
+  // Speed (m/s -> km/h)
+  const kmh = (point.speed || 0) * 3.6;
+  document.getElementById('statSpeed').textContent = Math.round(kmh);
+  if (kmh > state.session.topSpeed) state.session.topSpeed = kmh;
+
+  // Lap detection: every ~60s of moving distance > 100m, count a lap
+  // (Real implementation uses a geofenced start/finish line)
+  if (Date.now() - state.session.lapStart > 45000 && state.session.distance > state.session.laps * 100) {
+    state.session.laps++;
+    const lapTime = Math.floor((Date.now() - state.session.lapStart) / 1000);
+    if (!state.session.bestLap || lapTime < state.session.bestLap) {
+      state.session.bestLap = lapTime;
+    }
+    state.session.lapStart = Date.now();
+    document.getElementById('statLaps').textContent = state.session.laps;
+    document.getElementById('lapPill').textContent = `Lap ${state.session.laps}`;
+    toast(`Lap ${state.session.laps} complete`);
+  }
+
+  drawMap();
+}
+
+function onGPSError(err) {
+  const dot = document.getElementById('liveDot');
+  dot.classList.remove('searching');
+  dot.classList.add('error');
+  document.getElementById('liveText').textContent = 'No GPS';
+  document.getElementById('gpsStatus').textContent = err.message || 'GPS unavailable';
+  toast('GPS permission needed for tracking');
+}
+
+let mapCanvas, mapCtx;
+function initMap() {
+  mapCanvas = document.getElementById('liveMap');
+  const wrap = mapCanvas.parentElement;
+  const rect = wrap.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  mapCanvas.width = rect.width * dpr;
+  mapCanvas.height = rect.height * dpr;
+  mapCtx = mapCanvas.getContext('2d');
+  mapCtx.scale(dpr, dpr);
+  drawMap();
+}
+
+function drawMap() {
+  if (!mapCtx) return;
+  const w = mapCanvas.width / (window.devicePixelRatio || 1);
+  const h = mapCanvas.height / (window.devicePixelRatio || 1);
+
+  // Background grid
+  mapCtx.fillStyle = '#050505';
+  mapCtx.fillRect(0, 0, w, h);
+  mapCtx.strokeStyle = '#1a1a1a';
+  mapCtx.lineWidth = 0.5;
+  for (let x = 0; x < w; x += 24) {
+    mapCtx.beginPath(); mapCtx.moveTo(x, 0); mapCtx.lineTo(x, h); mapCtx.stroke();
+  }
+  for (let y = 0; y < h; y += 24) {
+    mapCtx.beginPath(); mapCtx.moveTo(0, y); mapCtx.lineTo(w, y); mapCtx.stroke();
+  }
+
+  if (state.session.points.length === 0) {
+    mapCtx.fillStyle = '#facc15';
+    mapCtx.font = "11px 'Barlow Condensed', sans-serif";
+    mapCtx.textAlign = 'center';
+    mapCtx.fillText('Waiting for GPS lock…', w/2, h/2);
+    return;
+  }
+
+  // Bounds
+  const lats = state.session.points.map(p => p.lat);
+  const lons = state.session.points.map(p => p.lon);
+  const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+  const minLon = Math.min(...lons), maxLon = Math.max(...lons);
+  const padLat = Math.max((maxLat - minLat) * 0.15, 0.0001);
+  const padLon = Math.max((maxLon - minLon) * 0.15, 0.0001);
+
+  const project = (p) => ({
+    x: ((p.lon - minLon + padLon) / (maxLon - minLon + 2 * padLon)) * w,
+    y: h - ((p.lat - minLat + padLat) / (maxLat - minLat + 2 * padLat)) * h
+  });
+
+  // Trail
+  mapCtx.strokeStyle = '#facc15';
+  mapCtx.lineWidth = 2.5;
+  mapCtx.lineCap = 'round';
+  mapCtx.lineJoin = 'round';
+  mapCtx.beginPath();
+  state.session.points.forEach((p, i) => {
+    const xy = project(p);
+    if (i === 0) mapCtx.moveTo(xy.x, xy.y);
+    else mapCtx.lineTo(xy.x, xy.y);
+  });
+  mapCtx.stroke();
+
+  // Current position
+  const last = state.session.points[state.session.points.length - 1];
+  const lastXY = project(last);
+  mapCtx.fillStyle = 'rgba(250,204,21,0.25)';
+  mapCtx.beginPath();
+  mapCtx.arc(lastXY.x, lastXY.y, 14, 0, Math.PI * 2);
+  mapCtx.fill();
+  mapCtx.fillStyle = '#facc15';
+  mapCtx.strokeStyle = '#0a0a0a';
+  mapCtx.lineWidth = 1.5;
+  mapCtx.beginPath();
+  mapCtx.arc(lastXY.x, lastXY.y, 6, 0, Math.PI * 2);
+  mapCtx.fill();
+  mapCtx.stroke();
+}
+
+// ============== SOS ==============
+function triggerSOS() {
+  document.getElementById('sosModal').classList.add('show');
+}
+function closeSOS() {
+  document.getElementById('sosModal').classList.remove('show');
+}
+function confirmSOS() {
+  closeSOS();
+  toast('SOS sent · staff alerted', 3000);
+  // Visual cue: flash live dot red briefly
+  const dot = document.getElementById('liveDot');
+  dot.classList.add('error');
+  document.getElementById('liveText').textContent = 'SOS · Help on way';
+}
+
+// ============== END ==============
+function endSession() {
+  if (state.session.timer) clearInterval(state.session.timer);
+  if (state.session.watchId !== null && navigator.geolocation) {
+    navigator.geolocation.clearWatch(state.session.watchId);
+  }
+  if (state.session.wakeLock) {
+    state.session.wakeLock.release().catch(() => {});
+    state.session.wakeLock = null;
+  }
+
+  const elapsed = Math.floor((Date.now() - state.session.startTime) / 1000);
+  const m = Math.floor(elapsed / 60);
+  const s = elapsed % 60;
+
+  document.getElementById('summaryName').textContent = state.rider.name.split(' ')[0];
+  document.getElementById('sumDuration').textContent = `${m}:${s.toString().padStart(2, '0')}`;
+  document.getElementById('sumLaps').textContent = state.session.laps;
+  document.getElementById('sumBest').textContent = state.session.bestLap
+    ? `${Math.floor(state.session.bestLap / 60)}:${(state.session.bestLap % 60).toString().padStart(2, '0')}`
+    : '—';
+  document.getElementById('sumDist').textContent = `${(state.session.distance / 1000).toFixed(2)} km`;
+  document.getElementById('sumTop').textContent = `${Math.round(state.session.topSpeed)} km/h`;
+
+  showScreen('screenSummary');
+}
+
+function resetApp() {
+  state.payMethod = null;
+  state.signature = null;
+  state.rider = { name: '', phone: '', bike: '', emergency: '' };
+  state.session = { startTime: null, points: [], laps: 0, bestLap: null, lapStart: null, topSpeed: 0, distance: 0, timer: null, watchId: null, wakeLock: null };
+  document.getElementById('riderName').value = '';
+  document.getElementById('riderPhone').value = '';
+  document.getElementById('riderBike').value = '';
+  document.getElementById('riderEmergency').value = '';
+  clearSignature();
+  showScreen('screenPay');
+}
+</script>
+
+</body>
+</html>
