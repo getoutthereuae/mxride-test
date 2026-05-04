@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mx Ride · Operator Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a1a;
+    padding: 24px;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; }
+  .frame { background: #0a0a0a; border-radius: 12px; overflow: hidden; border: 1px solid #1f1f1f; }
+  .stripe { height: 4px; background: repeating-linear-gradient(90deg, #facc15 0 14px, #0a0a0a 14px 28px); }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid #1f1f1f; }
+  .logo-group { display: inline-flex; align-items: center; gap: 8px; }
+  .logo-mark { width: 30px; height: 30px; background: #facc15; color: #0a0a0a; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 14px; transform: skewX(-8deg); }
+  .logo-mark span { transform: skewX(8deg); }
+  .logo-text { font-family: 'Barlow Condensed', sans-serif; font-weight: 500; font-size: 14px; letter-spacing: 0.14em; text-transform: uppercase; color: #ffffff; }
+  .badge { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #facc15; padding: 3px 7px; border: 1px solid #facc15; margin-left: 4px; }
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+  .meta { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #888; }
+  .live { display: inline-flex; align-items: center; gap: 6px; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #22c55e; }
+  .live::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #22c55e; }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; background: #facc15; color: #0a0a0a; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; font-family: 'Barlow Condensed', sans-serif; }
+  .grid { display: grid; grid-template-columns: 4fr 3fr; min-height: 540px; }
+  .left { padding: 16px 18px; border-right: 1px solid #1f1f1f; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+  .stat { background: #141414; border: 1px solid #1f1f1f; padding: 10px 12px; }
+  .stat.accent { border-left: 2px solid #facc15; }
+  .stat.alert { background: #2a0e0e; border: 1px solid #ef4444; border-left: 2px solid #ef4444; }
+  .stat-l { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #888; }
+  .stat.accent .stat-l { color: #facc15; }
+  .stat.alert .stat-l { color: #fca5a5; }
+  .stat-v { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 500; color: #fff; line-height: 1; }
+  .map { background: #050505; border: 1px solid #1f1f1f; border-radius: 4px; height: 380px; position: relative; overflow: hidden; }
+  .map-tabs { position: absolute; top: 10px; left: 12px; z-index: 2; display: flex; gap: 4px; }
+  .map-tab { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #888; background: #141414; padding: 3px 8px; border: 1px solid #2a2a2a; }
+  .map-tab.active { color: #0a0a0a; background: #facc15; border-color: #facc15; }
+  .map-loc { position: absolute; top: 10px; right: 12px; z-index: 2; font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #facc15; }
+  .map-legend { position: absolute; bottom: 10px; left: 12px; display: flex; gap: 12px; font-family: 'Barlow Condensed', sans-serif; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: #888; }
+  .legend-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; vertical-align: middle; margin-right: 4px; }
+  .right { display: flex; flex-direction: column; }
+  .sos-bar { background: #2a0e0e; border-bottom: 1px solid #ef4444; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; }
+  .sos-title { display: flex; align-items: center; gap: 8px; }
+  .sos-pulse { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.25); }
+  .sos-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: #fff; }
+  .sos-detail { font-size: 11px; color: #fca5a5; margin-top: 3px; padding-left: 16px; }
+  .sos-actions { display: flex; gap: 6px; }
+  .btn-sos { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 10px; cursor: pointer; font-weight: 500; }
+  .btn-dispatch { background: #ef4444; color: #fff; border: 1px solid #ef4444; }
+  .btn-mute { background: transparent; color: #fca5a5; border: 1px solid #ef4444; }
+  .filters { padding: 12px 18px; border-bottom: 1px solid #1f1f1f; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .filter-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #888; }
+  .filter-pill { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 8px; }
+  .filter-pill.active { color: #0a0a0a; background: #facc15; }
+  .filter-pill.inactive { color: #888; background: #141414; border: 1px solid #2a2a2a; }
+  .sort { margin-left: auto; font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #888; }
+  .riders { flex: 1; overflow: hidden; }
+  .rider-row { padding: 12px 18px; border-bottom: 1px solid #1f1f1f; display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+  .rider-row.selected { background: #141414; border-bottom-color: #2a2a2a; border-left: 2px solid #facc15; }
+  .rider-row.alert { background: rgba(239,68,68,0.06); border-left: 2px solid #ef4444; }
+  .rider-row.done { opacity: 0.6; }
+  .rider-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .rider-avatar { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; font-family: 'Barlow Condensed', sans-serif; }
+  .ra-yellow { background: #facc15; color: #0a0a0a; }
+  .ra-dark { background: #1a1a1a; border: 1px solid #2a2a2a; color: #ccc; font-weight: 500; }
+  .ra-alert { background: #2a0e0e; border: 1px solid #ef4444; color: #fca5a5; font-weight: 500; }
+  .rider-name { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 0.06em; color: #fff; text-transform: uppercase; }
+  .rider-name.dim { font-size: 13px; color: #ccc; }
+  .rider-bike { color: #facc15; font-size: 11px; }
+  .rider-bike-dim { color: #888; font-size: 11px; text-transform: none; }
+  .rider-bike-alert { color: #fca5a5; font-size: 11px; text-transform: none; }
+  .rider-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding-left: 34px; }
+  .rs-l { font-family: 'Barlow Condensed', sans-serif; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: #facc15; }
+  .rs-v { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; color: #fff; font-feature-settings: 'tnum'; }
+  .rider-meta { display: flex; gap: 12px; margin-top: 3px; font-family: 'Barlow Condensed', sans-serif; font-size: 10px; color: #888; letter-spacing: 0.06em; }
+  .rider-meta.alert { color: #fca5a5; }
+  .rider-meta.dim { color: #666; }
+  .status { font-family: 'Barlow Condensed', sans-serif; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .status.on { color: #22c55e; }
+  .status.alert { color: #ef4444; font-weight: 600; }
+  .status.done { color: #888; }
+  .ping { font-family: 'Barlow Condensed', sans-serif; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: #facc15; cursor: pointer; }
+  .footer { padding: 10px 18px; background: #050505; border-top: 1px solid #1f1f1f; display: flex; justify-content: space-between; align-items: center; }
+  .footer-text { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #888; }
+  .footer-action { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #facc15; cursor: pointer; }
+  .note { color: #888; font-size: 12px; margin-top: 16px; text-align: center; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="frame">
+    <div class="stripe"></div>
+    <div class="topbar">
+      <div class="logo-group">
+        <div class="logo-mark"><span>MX</span></div>
+        <span class="logo-text">Mx Ride</span>
+        <span class="badge">Track Console</span>
+      </div>
+      <div class="topbar-right">
+        <span class="meta">Wed · 14:27 GST</span>
+        <span class="live">Live</span>
+        <div class="avatar">GA</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="left">
+        <div class="stats">
+          <div class="stat accent"><div class="stat-l">Live</div><div class="stat-v">4</div></div>
+          <div class="stat"><div class="stat-l">Today</div><div class="stat-v">23</div></div>
+          <div class="stat"><div class="stat-l">Revenue</div><div class="stat-v">3,621</div></div>
+          <div class="stat alert"><div class="stat-l">SOS</div><div class="stat-v">1</div></div>
+        </div>
+        <div class="map">
+          <div class="map-tabs">
+            <span class="map-tab active">Satellite</span>
+            <span class="map-tab">Map</span>
+            <span class="map-tab">Heat</span>
+          </div>
+          <div class="map-loc">Mx Ride · Al Awir</div>
+          <svg width="100%" height="100%" viewBox="0 0 400 380" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <pattern id="dgrid" width="24" height="24" patternUnits="userSpaceOnUse">
+                <path d="M 24 0 L 0 0 0 24" fill="none" stroke="#0f0f0f" stroke-width="0.5"/>
+              </pattern>
+              <radialGradient id="sosglow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#ef4444" stop-opacity="0.6"/>
+                <stop offset="100%" stop-color="#ef4444" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            <rect width="400" height="380" fill="url(#dgrid)"/>
+            <path d="M50,90 Q90,50 150,80 Q210,110 270,70 Q330,40 360,100 Q380,170 340,230 Q300,290 230,290 Q160,280 110,310 Q60,330 40,260 Q20,190 50,90 Z" fill="#1a1a08" stroke="#facc15" stroke-width="2" opacity="0.55"/>
+            <path d="M50,90 Q90,50 150,80 Q210,110 270,70 Q330,40 360,100 Q380,170 340,230 Q300,290 230,290 Q160,280 110,310 Q60,330 40,260 Q20,190 50,90 Z" fill="none" stroke="#facc15" stroke-width="0.5" stroke-dasharray="2,4" opacity="0.8"/>
+            <line x1="48" y1="86" x2="56" y2="102" stroke="#22c55e" stroke-width="2"/>
+            <text x="62" y="102" font-family="Barlow Condensed, sans-serif" font-size="9" fill="#22c55e">START</text>
+            <g>
+              <circle cx="170" cy="78" r="6" fill="#facc15" stroke="#0a0a0a" stroke-width="1.5"/>
+              <circle cx="170" cy="78" r="13" fill="#facc15" opacity="0.2"/>
+              <text x="180" y="70" font-family="Barlow Condensed, sans-serif" font-size="10" fill="#fff" font-weight="500">George · L7</text>
+            </g>
+            <g>
+              <circle cx="310" cy="90" r="5" fill="#22c55e" stroke="#0a0a0a" stroke-width="1.5"/>
+              <text x="320" y="86" font-family="Barlow Condensed, sans-serif" font-size="10" fill="#ccc">Sara · L4</text>
+            </g>
+            <g>
+              <circle cx="80" cy="270" r="5" fill="#22c55e" stroke="#0a0a0a" stroke-width="1.5"/>
+              <text x="92" y="274" font-family="Barlow Condensed, sans-serif" font-size="10" fill="#ccc">Yusuf · L11</text>
+            </g>
+            <g>
+              <circle cx="320" cy="230" r="22" fill="url(#sosglow)"/>
+              <circle cx="320" cy="230" r="7" fill="#ef4444" stroke="#0a0a0a" stroke-width="1.5"/>
+              <text x="330" y="226" font-family="Barlow Condensed, sans-serif" font-size="10" fill="#ef4444" font-weight="600">Omar · SOS</text>
+              <text x="330" y="238" font-family="Barlow Condensed, sans-serif" font-size="8" fill="#fca5a5">no movement 1m</text>
+            </g>
+          </svg>
+          <div class="map-legend">
+            <span><span class="legend-dot" style="background:#facc15"></span>Selected</span>
+            <span><span class="legend-dot" style="background:#22c55e"></span>Active</span>
+            <span><span class="legend-dot" style="background:#ef4444"></span>Alert</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="right">
+        <div class="sos-bar">
+          <div>
+            <div class="sos-title">
+              <span class="sos-pulse"></span>
+              <span class="sos-name">SOS · Omar Daoud</span>
+            </div>
+            <div class="sos-detail">No GPS movement for 1m 04s · Turn 4 sector</div>
+          </div>
+          <div class="sos-actions">
+            <button class="btn-sos btn-dispatch">Dispatch</button>
+            <button class="btn-sos btn-mute">Mute</button>
+          </div>
+        </div>
+
+        <div class="filters">
+          <span class="filter-label">Filter</span>
+          <span class="filter-pill active">Active</span>
+          <span class="filter-pill inactive">Today</span>
+          <span class="filter-pill inactive">All</span>
+          <span class="sort">Sort: time on track ↓</span>
+        </div>
+
+        <div class="riders">
+          <div class="rider-row selected">
+            <div>
+              <div class="rider-head">
+                <div class="rider-avatar ra-yellow">GA</div>
+                <span class="rider-name">George</span>
+                <span class="rider-bike">· KTM 350 SX-F</span>
+              </div>
+              <div class="rider-stats">
+                <div><div class="rs-l">Time</div><div class="rs-v">12:34</div></div>
+                <div><div class="rs-l">Laps</div><div class="rs-v">7</div></div>
+                <div><div class="rs-l">Best</div><div class="rs-v">1:38</div></div>
+                <div><div class="rs-l">Top</div><div class="rs-v">62</div></div>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px; align-items: end;">
+              <span class="status on">● On track</span>
+              <span class="ping">↗ Ping</span>
+            </div>
+          </div>
+
+          <div class="rider-row">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="rider-avatar ra-dark">SK</div>
+              <div>
+                <div class="rider-name dim">Sara K · <span class="rider-bike-dim">Husq 250</span></div>
+                <div class="rider-meta">
+                  <span style="font-feature-settings: 'tnum';">08:11</span>
+                  <span style="font-feature-settings: 'tnum';">4 laps</span>
+                  <span style="font-feature-settings: 'tnum';">Best 1:54</span>
+                </div>
+              </div>
+            </div>
+            <span class="status on">● On track</span>
+          </div>
+
+          <div class="rider-row">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="rider-avatar ra-dark">YA</div>
+              <div>
+                <div class="rider-name dim">Yusuf A · <span class="rider-bike-dim">YZ 450</span></div>
+                <div class="rider-meta">
+                  <span style="font-feature-settings: 'tnum';">22:47</span>
+                  <span style="font-feature-settings: 'tnum';">11 laps</span>
+                  <span style="font-feature-settings: 'tnum';">Best 1:33</span>
+                </div>
+              </div>
+            </div>
+            <span class="status on">● On track</span>
+          </div>
+
+          <div class="rider-row alert">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="rider-avatar ra-alert">OD</div>
+              <div>
+                <div class="rider-name">Omar D · <span class="rider-bike-alert">CRF 250R</span></div>
+                <div class="rider-meta alert">
+                  <span style="font-feature-settings: 'tnum';">06:22</span>
+                  <span>Last move 1m 04s</span>
+                  <span>EC: Layla +971 50</span>
+                </div>
+              </div>
+            </div>
+            <span class="status alert">● SOS</span>
+          </div>
+
+          <div class="rider-row done">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="rider-avatar ra-dark">RM</div>
+              <div>
+                <div class="rider-name dim">Rashid M · <span class="rider-bike-dim">RMZ 450</span></div>
+                <div class="rider-meta dim">
+                  <span>Ended 14:08</span>
+                  <span style="font-feature-settings: 'tnum';">31:42</span>
+                  <span style="font-feature-settings: 'tnum';">Best 1:41</span>
+                </div>
+              </div>
+            </div>
+            <span class="status done">○ Done</span>
+          </div>
+        </div>
+
+        <div class="footer">
+          <span class="footer-text">Showing 5 · sync 0.4s ago</span>
+          <span class="footer-action">↓ Export today CSV</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="stripe"></div>
+  </div>
+
+  <p class="note">Static mockup · what the gate operator sees on a laptop or iPad while riders are on the track</p>
+</div>
+</body>
+</html>
