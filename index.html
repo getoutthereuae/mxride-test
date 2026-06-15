@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<title>Mx Ride · Track Session</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: #0a0a0a; color: #0a0a0a; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  .app { max-width: 480px; margin: 0 auto; height: 100dvh; background: #ffffff; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+  .stripe-top { height: 4px; background: repeating-linear-gradient(90deg, #facc15 0 14px, #0a0a0a 14px 28px); flex-shrink: 0; }
+  .screen { flex: 1; padding: 22px 22px 28px; overflow-y: auto; -webkit-overflow-scrolling: touch; display: none; flex-direction: column; }
+  .screen.active { display: flex; }
+  .eyebrow { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #6b6b6b; font-weight: 500; }
+  .header-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; flex-shrink: 0; }
+  .logo { display: inline-flex; align-items: center; gap: 8px; }
+  .logo-mark { width: 32px; height: 32px; background: #0a0a0a; color: #facc15; display: flex; align-items: center; justify-content: center; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 14px; transform: skewX(-8deg); }
+  .logo-mark span { transform: skewX(8deg); }
+  .logo-text { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 15px; letter-spacing: 0.16em; text-transform: uppercase; color: #0a0a0a; }
+  .step-label { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #0a0a0a; font-weight: 500; }
+  h1.title { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #0a0a0a; margin-bottom: 6px; line-height: 1; }
+  .subtitle { font-size: 13px; color: #6b6b6b; line-height: 1.5; margin-bottom: 22px; }
+  .price-banner { text-align: center; padding: 22px 0; border-top: 1px solid #0a0a0a; border-bottom: 1px solid #0a0a0a; position: relative; margin-bottom: 18px; }
+  .price-banner::before { content: ""; position: absolute; top: -1px; left: 0; width: 48px; height: 3px; background: #facc15; }
+  .price { font-family: 'Barlow Condensed', sans-serif; font-size: 56px; font-weight: 600; letter-spacing: 0.02em; color: #0a0a0a; line-height: 1; }
+  .price-label { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: #6b6b6b; margin-bottom: 6px; }
+  .row { display: flex; justify-content: space-between; padding: 11px 0; font-size: 14px; border-bottom: 0.5px solid #e5e5e5; }
+  .row:last-child { border-bottom: none; }
+  .row .label { color: #6b6b6b; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; }
+  .row .val { font-weight: 500; color: #0a0a0a; font-variant-numeric: tabular-nums; }
+  .row.total { border-top: 1px solid #0a0a0a; padding-top: 14px; margin-top: 4px; }
+  .row.total .label { color: #0a0a0a; }
+  .row.total .val { font-size: 16px; }
+  .btn { width: 100%; padding: 16px; border-radius: 6px; font-size: 14px; font-weight: 600; border: 1.5px solid #0a0a0a; background: #ffffff; cursor: pointer; color: #0a0a0a; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Barlow Condensed', sans-serif; margin-bottom: 10px; transition: transform 0.05s ease; }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: #facc15; color: #0a0a0a; }
+  .btn-dark { background: #0a0a0a; color: #facc15; }
+  .btn-danger { background: #fef2f2; color: #991b1b; border-color: #fca5a5; }
+  .btn-small { padding: 9px 12px; font-size: 11px; margin-bottom: 0; width: auto; flex: 1; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .lang-toggle { display: flex; gap: 4px; }
+  .lang-toggle span { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 8px; font-weight: 500; }
+  .lang-toggle .active { background: #0a0a0a; color: #facc15; border-radius: 2px; }
+  .waiver-box { background: #f5f5f5; border-radius: 4px; padding: 14px; height: 220px; overflow-y: auto; font-size: 12px; color: #555; line-height: 1.7; margin-bottom: 16px; border-left: 3px solid #facc15; -webkit-overflow-scrolling: touch; }
+  .waiver-box p { margin-bottom: 10px; }
+  .sig-canvas-wrap { position: relative; height: 140px; border: 2px dashed #0a0a0a; border-radius: 4px; margin-bottom: 16px; background: #fffef5; overflow: hidden; }
+  #sigCanvas { width: 100%; height: 100%; display: block; touch-action: none; }
+  .sig-clear { position: absolute; bottom: 6px; right: 10px; font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #6b6b6b; background: transparent; border: none; cursor: pointer; padding: 4px 6px; font-weight: 500; }
+  .sig-placeholder { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: #c4c4c4; pointer-events: none; }
+  .sig-placeholder.hidden { display: none; }
+  .field-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #6b6b6b; margin-bottom: 5px; font-weight: 500; }
+  .field-input { width: 100%; background: #f5f5f5; border-radius: 4px; padding: 13px 14px; font-size: 15px; margin-bottom: 14px; border: none; border-left: 2px solid #facc15; color: #0a0a0a; font-family: inherit; -webkit-appearance: none; appearance: none; outline: none; }
+  .field-input:focus { background: #eeeeee; border-left-color: #eab308; }
+  .field-input.emergency { border-left-color: #ef4444; background: #fef2f2; }
+  .field-input.emergency:focus { background: #fee2e2; }
+  .field-label.emergency { color: #991b1b; }
+  .live-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-shrink: 0; }
+  .live-dot { display: inline-flex; align-items: center; gap: 8px; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: #0a0a0a; font-weight: 500; }
+  .live-dot .pulse { width: 9px; height: 9px; border-radius: 50%; background: #22c55e; animation: pulse 1.4s infinite; }
+  .live-dot.searching .pulse { background: #facc15; }
+  .live-dot.error .pulse { background: #ef4444; animation: none; }
+  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.85); } }
+  .map-wrap { background: #0a0a0a; border-radius: 6px; aspect-ratio: 1.05; position: relative; overflow: hidden; margin-bottom: 14px; border: 1px solid #facc15; flex-shrink: 0; }
+  #liveMap { width: 100%; height: 100%; display: block; }
+  .lap-pill { position: absolute; top: 10px; right: 12px; background: rgba(250,204,21,0.18); border: 1px solid #facc15; padding: 4px 10px; border-radius: 3px; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #facc15; font-weight: 600; }
+  .gps-status { position: absolute; bottom: 10px; left: 12px; right: 12px; font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #facc15; font-weight: 500; pointer-events: none; }
+  .map-badge { position: absolute; top: 10px; left: 12px; font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #facc15; background: rgba(0,0,0,0.55); padding: 3px 8px; border-radius: 3px; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; flex-shrink: 0; }
+  .stat-tile { background: #0a0a0a; border-radius: 4px; padding: 12px 8px; text-align: center; }
+  .stat-tile .l { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #facc15; font-weight: 500; }
+  .stat-tile .v { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 600; color: #ffffff; font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .summary-card { background: #0a0a0a; border-radius: 6px; padding: 18px 20px; color: white; margin-bottom: 16px; }
+  .summary-card .row .label { color: #facc15; }
+  .summary-card .row .val { color: white; font-size: 16px; }
+  .summary-card .row { border-bottom-color: #2a2a2a; }
+  .checker-icon { width: 60px; height: 60px; background: #facc15; display: flex; align-items: center; justify-content: center; margin: 8px auto 14px; transform: rotate(-4deg); border-radius: 4px; }
+  .checker-icon svg { transform: rotate(4deg); }
+  .processing { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 16px; }
+  .spinner { width: 38px; height: 38px; border: 3px solid #f5f5f5; border-top-color: #0a0a0a; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(10,10,10,0.78); display: none; align-items: flex-end; justify-content: center; z-index: 100; }
+  .modal-backdrop.show { display: flex; }
+  .modal { background: white; width: 100%; max-width: 480px; border-radius: 14px 14px 0 0; padding: 24px 22px 32px; max-height: 80dvh; overflow-y: auto; }
+  .modal h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px; }
+  .modal p { font-size: 13px; color: #6b6b6b; margin-bottom: 16px; line-height: 1.5; }
+  .pay-method { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-radius: 6px; background: #0a0a0a; color: white; margin-bottom: 8px; cursor: pointer; }
+  .pay-method:active { transform: scale(0.99); }
+  .pay-method-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #0a0a0a; color: white; padding: 12px 18px; border-radius: 4px; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; z-index: 200; opacity: 0; transition: opacity 0.2s; pointer-events: none; border-left: 3px solid #facc15; max-width: 86%; text-align: center; }
+  .toast.show { opacity: 1; }
+  .sos-modal .modal { border-top: 4px solid #ef4444; }
+  .sos-modal h2 { color: #991b1b; }
+  .sos-confirm { background: #ef4444; color: white; border: 1.5px solid #ef4444; }
+  .demo-banner { background: #fef9c3; border-left: 3px solid #facc15; padding: 10px 14px; margin-bottom: 14px; font-size: 11px; color: #713f12; line-height: 1.5; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.04em; }
+  .demo-banner strong { font-weight: 600; }
+  .gpx-card { background: #f5f5f5; border-left: 3px solid #facc15; padding: 12px 14px; margin-bottom: 14px; border-radius: 4px; }
+  .gpx-card-title { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; color: #0a0a0a; margin-bottom: 4px; }
+  .gpx-card-status { font-size: 12px; color: #6b6b6b; line-height: 1.5; margin-bottom: 8px; }
+  .gpx-card-status.loaded { color: #166534; font-weight: 500; }
+  .gpx-actions { display: flex; gap: 6px; }
+  .file-hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="stripe-top"></div>
+
+  <section class="screen active" id="screenPay">
+    <div class="header-bar">
+      <div class="logo"><div class="logo-mark"><span>MX</span></div><span class="logo-text">Mx Ride</span></div>
+      <span class="eyebrow">Day pass</span>
+    </div>
+    <div class="demo-banner"><strong>Mx Ride edition.</strong> Track is pre-loaded. Payment is simulated. GPS, signature, and tracking are real.</div>
+
+    <div class="gpx-card">
+      <div class="gpx-card-title">Track GPX</div>
+      <div class="gpx-card-status" id="gpxStatus">Loading Mx Ride track…</div>
+      <div class="gpx-actions">
+        <button class="btn btn-small" onclick="document.getElementById('gpxFile').click()">Load GPX</button>
+        <button class="btn btn-small" onclick="loadSampleGPX()">Sample</button>
+        <button class="btn btn-small" id="gpxClearBtn" onclick="clearGPX()" style="display: none;">Clear</button>
+      </div>
+      <input type="file" id="gpxFile" class="file-hidden" accept=".gpx,application/gpx+xml,application/xml,text/xml" onchange="handleGPXFile(event)">
+    </div>
+
+    <div class="price-banner">
+      <div class="price-label">Track session</div>
+      <div class="price">AED 150</div>
+    </div>
+    <div style="margin-bottom: 18px;">
+      <div class="row"><span class="label">Subtotal</span><span class="val">150.00</span></div>
+      <div class="row"><span class="label">VAT 5%</span><span class="val">7.50</span></div>
+      <div class="row total"><span class="label">Total AED</span><span class="val">157.50</span></div>
+    </div>
+    <button class="btn btn-dark" onclick="openPayModal('apple')">  Pay</button>
+    <button class="btn" onclick="openPayModal('gpay')">G  Google Pay</button>
+    <p class="eyebrow" style="text-align: center; margin-top: 12px; font-size: 10px;">Secured by Stripe</p>
+  </section>
+
+  <section class="screen" id="screenProcessing">
+    <div class="processing">
+      <div class="spinner"></div>
+      <div style="font-family: 'Barlow Condensed', sans-serif; font-size: 16px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; color: #0a0a0a;">Processing payment</div>
+      <div style="font-size: 12px; color: #6b6b6b;">This is simulated for the prototype</div>
+    </div>
+  </section>
+
+  <section class="screen" id="screenWaiver">
+    <div class="header-bar">
+      <span class="step-label">Step 02 / Waiver</span>
+      <div class="lang-toggle">
+        <span class="active">EN</span>
+        <span>AR</span>
+      </div>
+    </div>
+    <h1 class="title">Liability waiver</h1>
+    <p class="subtitle">Read carefully, then sign below to continue.</p>
+    <div class="waiver-box">
+      <p>I, the undersigned, acknowledge that motocross is an inherently dangerous activity involving substantial risk of serious injury, permanent disability, or death.</p>
+      <p>I voluntarily agree to ride at my own risk and hereby release Mx Ride, its owners, operators, staff, instructors, and affiliates from any and all liability arising from my use of the facility, including but not limited to negligence on the part of any released party.</p>
+      <p>I confirm that I am physically fit to ride, hold appropriate insurance coverage, and will wear all required safety equipment at all times while on track — including helmet, boots, gloves, chest protector, and goggles.</p>
+      <p>I agree to follow all track rules, marshal instructions, and posted speed and direction guidance. Violation of these rules may result in immediate removal from the facility without refund.</p>
+      <p>I consent to the collection of GPS location data during my session for the purposes of safety monitoring and emergency response.</p>
+      <p>By signing below I confirm that I have read, understood, and agreed to all of the above.</p>
+    </div>
+    <div class="field-label">Sign below</div>
+    <div class="sig-canvas-wrap">
+      <canvas id="sigCanvas"></canvas>
+      <span class="sig-placeholder" id="sigPlaceholder">Tap and draw</span>
+      <button class="sig-clear" onclick="clearSignature()">Clear</button>
+    </div>
+    <button class="btn btn-primary" onclick="submitWaiver()" id="waiverBtn" disabled>Agree & continue</button>
+  </section>
+
+  <section class="screen" id="screenInfo">
+    <div class="header-bar"><span class="step-label">Step 03 / Rider</span></div>
+    <h1 class="title">Your details</h1>
+    <p class="subtitle">For your session record and emergency contact.</p>
+    <div class="field-label">Full name</div>
+    <input class="field-input" id="riderName" type="text" placeholder="George Aramouni" autocomplete="name">
+    <div class="field-label">Phone</div>
+    <input class="field-input" id="riderPhone" type="tel" placeholder="+971 50 000 0000" autocomplete="tel">
+    <div class="field-label">Bike</div>
+    <input class="field-input" id="riderBike" type="text" placeholder="KTM 350 SX-F">
+    <div class="field-label emergency">Emergency contact</div>
+    <input class="field-input emergency" id="riderEmergency" type="text" placeholder="Name & phone">
+    <button class="btn btn-primary" onclick="submitInfo()" style="margin-top: 6px;">Start session</button>
+  </section>
+
+  <section class="screen" id="screenRide">
+    <div class="live-bar">
+      <span class="live-dot searching" id="liveDot"><span class="pulse"></span><span id="liveText">Acquiring GPS</span></span>
+      <span class="eyebrow">Session #1284</span>
+    </div>
+    <div class="map-wrap">
+      <canvas id="liveMap"></canvas>
+      <div class="map-badge" id="mapBadge">No track</div>
+      <div class="lap-pill" id="lapPill">Lap 0</div>
+      <div class="gps-status" id="gpsStatus">Waiting…</div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-tile"><div class="l">Time</div><div class="v" id="statTime">0:00</div></div>
+      <div class="stat-tile"><div class="l">Laps</div><div class="v" id="statLaps">0</div></div>
+      <div class="stat-tile"><div class="l">km/h</div><div class="v" id="statSpeed">0</div></div>
+    </div>
+    <button class="btn btn-primary" onclick="endSession()">End session</button>
+    <button class="btn btn-danger" onclick="triggerSOS()">!  I need help</button>
+  </section>
+
+  <section class="screen" id="screenSummary">
+    <div style="text-align: center; margin-top: 20px;">
+      <div class="checker-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      </div>
+      <h1 class="title" style="text-align: center; font-size: 32px;">Checkered flag</h1>
+      <p class="subtitle" style="text-align: center;">Nice ride, <span id="summaryName">George</span></p>
+    </div>
+    <div class="summary-card">
+      <div class="row"><span class="label">Duration</span><span class="val" id="sumDuration">0:00</span></div>
+      <div class="row"><span class="label">Laps</span><span class="val" id="sumLaps">0</span></div>
+      <div class="row"><span class="label">Best lap</span><span class="val" id="sumBest">—</span></div>
+      <div class="row"><span class="label">Distance</span><span class="val" id="sumDist">0.0 km</span></div>
+      <div class="row"><span class="label">Top speed</span><span class="val" id="sumTop">0 km/h</span></div>
+    </div>
+    <button class="btn btn-primary" onclick="downloadGPX()">Download GPX</button>
+    <button class="btn" onclick="resetApp()">New session</button>
+  </section>
+</div>
+
+<div class="modal-backdrop" id="payModal">
+  <div class="modal">
+    <h2 id="payModalTitle">Apple Pay</h2>
+    <p>Confirm payment of <strong>AED 157.50</strong> to Mx Ride · Track Session.</p>
+    <div class="pay-method">
+      <span class="pay-method-name">Pay AED 157.50</span>
+      <span style="font-size: 12px; opacity: 0.7;">Visa ••• 4242</span>
+    </div>
+    <button class="btn btn-dark" onclick="confirmPay()" style="margin-top: 12px;">Confirm payment</button>
+    <button class="btn" onclick="closePayModal()">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-backdrop sos-modal" id="sosModal">
+  <div class="modal">
+    <h2>Send SOS alert?</h2>
+    <p>This will alert track staff with your last known GPS location and emergency contact details. Only use if you genuinely need help.</p>
+    <button class="btn sos-confirm" onclick="confirmSOS()">Yes, send SOS</button>
+    <button class="btn" onclick="closeSOS()">Cancel</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const BAKED_TRACK = {"name":"Mx ride - Wikiloc","points":[[24.8787,55.551907],[24.878704,55.551962],[24.87872,55.552027],[24.878729,55.552113],[24.878732,55.552215],[24.878737,55.552332],[24.878738,55.552462],[24.878733,55.552603],[24.878727,55.552764],[24.878714,55.552935],[24.878702,55.553113],[24.878696,55.553287],[24.87869,55.553452],[24.878683,55.553614],[24.878678,55.553778],[24.87868,55.553945],[24.878683,55.554115],[24.87869,55.554288],[24.878696,55.554466],[24.878713,55.554626],[24.878748,55.554769],[24.878802,55.5549],[24.878873,55.555014],[24.878953,55.555111],[24.879051,55.55519],[24.879143,55.555257],[24.879247,55.555327],[24.879345,55.555399],[24.879441,55.555471],[24.879541,55.555562],[24.879631,55.555664],[24.879714,55.555781],[24.879792,55.555905],[24.879871,55.556041],[24.879951,55.556177],[24.880017,55.556301],[24.880055,55.556411],[24.880075,55.556523],[24.880072,55.556639],[24.880044,55.55675],[24.879997,55.556843],[24.879939,55.556913],[24.879864,55.55696],[24.879774,55.55698],[24.879665,55.556989],[24.879547,55.556995],[24.879441,55.55701],[24.879353,55.557043],[24.879292,55.557088],[24.87925,55.557145],[24.879234,55.557214],[24.879253,55.557288],[24.879303,55.557356],[24.879372,55.557405],[24.879467,55.557386],[24.879575,55.55737],[24.879684,55.557353],[24.87979,55.557351],[24.879905,55.557371],[24.880008,55.557412],[24.880086,55.557468],[24.880133,55.55754],[24.880166,55.55761],[24.88016,55.557678],[24.88012,55.55774],[24.880062,55.557786],[24.879988,55.557788],[24.879921,55.557779],[24.879844,55.557759],[24.87975,55.557752],[24.879665,55.557758],[24.879575,55.55781],[24.879498,55.557867],[24.879444,55.557959],[24.879414,55.558048],[24.879418,55.558142],[24.879466,55.558235],[24.879543,55.558306],[24.879637,55.558386],[24.879712,55.558456],[24.879766,55.558522],[24.879796,55.558598],[24.879793,55.558682],[24.87976,55.558769],[24.879698,55.558855],[24.87962,55.558929],[24.879569,55.558994],[24.879544,55.55906],[24.879554,55.55913],[24.879609,55.559187],[24.879691,55.559226],[24.879796,55.559241],[24.879904,55.559227],[24.880006,55.559182],[24.880082,55.559112],[24.880154,55.559023],[24.880217,55.55891],[24.880265,55.558775],[24.880297,55.55862],[24.880324,55.558459],[24.88035,55.558298],[24.880381,55.55814],[24.88042,55.557989],[24.880474,55.557847],[24.880544,55.557714],[24.88063,55.557609],[24.880725,55.55753],[24.880813,55.55749],[24.880883,55.557483],[24.880956,55.557478],[24.881043,55.557477],[24.881183,55.557475],[24.881316,55.557499],[24.88145,55.557529],[24.881581,55.557572],[24.881718,55.557627],[24.881818,55.557688],[24.881885,55.557748],[24.881932,55.557804],[24.881946,55.557856],[24.881885,55.557934],[24.881811,55.55794],[24.881727,55.557934],[24.881648,55.557941],[24.881572,55.557966],[24.881501,55.558013],[24.881449,55.55808],[24.881437,55.558154],[24.88145,55.55822],[24.881484,55.558281],[24.881554,55.558318],[24.881637,55.55834],[24.881738,55.558342],[24.881843,55.558325],[24.881946,55.558288],[24.882053,55.55824],[24.882172,55.558192],[24.882265,55.558167],[24.882387,55.558134],[24.882512,55.558106],[24.882635,55.558093],[24.882733,55.558101],[24.882753,55.558169],[24.882761,55.558234],[24.88273,55.558314],[24.88266,55.558385],[24.882565,55.558432],[24.882452,55.558463],[24.882339,55.558484],[24.882233,55.558504],[24.882127,55.558526],[24.882028,55.558555],[24.881926,55.558603],[24.88185,55.558652],[24.881782,55.558719],[24.881734,55.558822],[24.881708,55.558928],[24.881714,55.559038],[24.88174,55.55913],[24.881767,55.559212],[24.881786,55.559305],[24.881786,55.559381],[24.881766,55.559451],[24.881735,55.559502],[24.881684,55.559528],[24.881621,55.559538],[24.881562,55.559527],[24.881501,55.55949],[24.881448,55.559422],[24.881389,55.559338],[24.881334,55.559255],[24.881285,55.559176],[24.881238,55.559105],[24.881163,55.559052],[24.881073,55.559018],[24.880972,55.559007],[24.880866,55.559023],[24.880759,55.559067],[24.880681,55.559108],[24.880604,55.559155],[24.880515,55.559203],[24.880417,55.559265],[24.880331,55.559337],[24.880273,55.559415],[24.880241,55.559497],[24.880239,55.559566],[24.880292,55.559635],[24.880399,55.559614],[24.880472,55.55958],[24.880538,55.559564],[24.880601,55.559575],[24.880665,55.559604],[24.880673,55.559675],[24.880658,55.559743],[24.88063,55.559801],[24.880579,55.559846],[24.880504,55.559869],[24.88041,55.559873],[24.880307,55.559863],[24.880199,55.55985],[24.880097,55.559826],[24.879995,55.559803],[24.879878,55.559787],[24.879748,55.559781],[24.879622,55.559783],[24.879512,55.559777],[24.879417,55.55978],[24.879362,55.559802],[24.879309,55.559838],[24.879305,55.559948],[24.879344,55.560001],[24.879429,55.56004],[24.879521,55.560055],[24.879614,55.56007],[24.879725,55.560088],[24.879845,55.560112],[24.879966,55.560131],[24.880078,55.560146],[24.880194,55.560153],[24.880309,55.560149],[24.880428,55.560134],[24.880555,55.560131],[24.880685,55.560119],[24.880783,55.560098],[24.880875,55.560076],[24.880985,55.560044],[24.881063,55.560017],[24.881148,55.559992],[24.881223,55.559967],[24.881309,55.559943],[24.881418,55.559927],[24.881533,55.559916],[24.881652,55.559915],[24.881763,55.559919],[24.881883,55.559928],[24.881993,55.559955],[24.882106,55.559999],[24.882218,55.560031],[24.882302,55.560067],[24.88239,55.560105],[24.882459,55.560134],[24.88253,55.560158],[24.882622,55.560188],[24.882722,55.560224],[24.882831,55.560257],[24.882911,55.560287],[24.882957,55.560306],[24.883012,55.560329],[24.883097,55.560358],[24.883186,55.56041],[24.883267,55.560473],[24.88334,55.560543],[24.883411,55.560621],[24.88349,55.56069],[24.883588,55.560754],[24.883699,55.560809],[24.88382,55.56085],[24.88394,55.56087],[24.884043,55.560875],[24.884126,55.560886],[24.884212,55.560896],[24.884299,55.560928],[24.884379,55.561012],[24.884434,55.561105],[24.884461,55.561211],[24.884462,55.561319],[24.884429,55.561429],[24.884365,55.561543],[24.884273,55.561646],[24.884163,55.561731],[24.884048,55.561791],[24.883945,55.561826],[24.883856,55.561839],[24.883746,55.561853],[24.883625,55.56186],[24.8835,55.561863],[24.88336,55.561865],[24.88322,55.561863],[24.883084,55.56186],[24.88297,55.561852],[24.882845,55.561847],[24.882726,55.561836],[24.882609,55.561817],[24.882485,55.561795],[24.882346,55.561772],[24.882206,55.561745],[24.882061,55.561717],[24.881902,55.561687],[24.881751,55.56166],[24.8816,55.561623],[24.881473,55.561571],[24.881366,55.561524],[24.88128,55.561487],[24.881196,55.561448],[24.881116,55.561404],[24.881039,55.561362],[24.880978,55.56133],[24.880899,55.561293],[24.880808,55.561239],[24.880713,55.561173],[24.880619,55.561104],[24.880523,55.56104],[24.880426,55.560978],[24.880342,55.560927],[24.880247,55.560888],[24.880135,55.560863],[24.880016,55.56086],[24.879902,55.560879],[24.879788,55.560918],[24.879673,55.560974],[24.879554,55.561047],[24.879447,55.56112],[24.879372,55.561183],[24.879305,55.561247],[24.879221,55.561311],[24.879115,55.561368],[24.879024,55.561411],[24.878947,55.561443],[24.878868,55.561471],[24.878774,55.561503],[24.878673,55.561551],[24.878595,55.561602],[24.878525,55.561662],[24.878474,55.561735],[24.878442,55.56182],[24.878431,55.561916],[24.878443,55.562001],[24.87848,55.562104],[24.878535,55.562194],[24.878618,55.562287],[24.878719,55.562382],[24.878816,55.562463],[24.878922,55.562535],[24.879044,55.562585],[24.879173,55.562607],[24.87929,55.562614],[24.879374,55.562617],[24.879471,55.562632],[24.879579,55.562667],[24.879706,55.56272],[24.879819,55.562774],[24.879922,55.562833],[24.88003,55.562905],[24.880154,55.56298],[24.880294,55.563033],[24.880425,55.563063],[24.880535,55.563069],[24.880638,55.563066],[24.880733,55.563054],[24.880841,55.563047],[24.88094,55.563062],[24.88104,55.563101],[24.881142,55.563155],[24.881249,55.56322],[24.88136,55.563296],[24.881472,55.563385],[24.881578,55.56347],[24.881675,55.563546],[24.881779,55.563618],[24.881889,55.563667],[24.882004,55.563703],[24.882131,55.563743],[24.882272,55.563784],[24.882402,55.563816],[24.882503,55.563828],[24.882582,55.56384],[24.882659,55.563846],[24.882755,55.563851],[24.88287,55.563849],[24.882984,55.56386],[24.883111,55.563886],[24.883206,55.563914],[24.883277,55.563935],[24.883351,55.563954],[24.883443,55.563978],[24.883541,55.563998],[24.883646,55.564004],[24.883758,55.564002],[24.883858,55.563998],[24.883942,55.563991],[24.884051,55.563984],[24.884147,55.563978],[24.884244,55.563988],[24.884368,55.563999],[24.884466,55.564018],[24.88457,55.564036],[24.884689,55.564052],[24.884815,55.564074],[24.884928,55.564098],[24.885014,55.564115],[24.8851,55.564129],[24.88518,55.564133],[24.885253,55.564134],[24.885341,55.564145],[24.885454,55.564179],[24.885555,55.564212],[24.885642,55.564231],[24.885712,55.564241],[24.885827,55.564254],[24.885943,55.564266],[24.886062,55.564285],[24.886156,55.564296],[24.886254,55.564291],[24.88634,55.56426],[24.886411,55.564202],[24.886469,55.564116],[24.886504,55.564008],[24.886518,55.563879],[24.886513,55.563738],[24.886506,55.563601],[24.886494,55.563443],[24.886473,55.563279],[24.886443,55.563112],[24.886419,55.562939],[24.886398,55.562786],[24.886378,55.562631],[24.886357,55.562457],[24.886343,55.56227],[24.886322,55.562087],[24.886296,55.561923],[24.886276,55.561773],[24.886263,55.561622],[24.886254,55.561457],[24.886239,55.56128],[24.886216,55.561088],[24.886182,55.5609],[24.886157,55.560733],[24.886138,55.56057],[24.886134,55.560418],[24.886152,55.560289],[24.886186,55.560177],[24.886234,55.560088],[24.88629,55.560004],[24.886358,55.559916],[24.886435,55.559804],[24.886511,55.559677],[24.886549,55.559546],[24.886575,55.559402],[24.886597,55.559265],[24.886613,55.559115],[24.886631,55.558949],[24.886638,55.558774],[24.886639,55.558603],[24.88663,55.558447],[24.886614,55.558324],[24.886592,55.558218],[24.886552,55.558135],[24.88649,55.55804],[24.886398,55.557944],[24.886285,55.557864],[24.886152,55.557798],[24.886013,55.557758],[24.885883,55.557733],[24.885794,55.557729],[24.885691,55.557734],[24.885567,55.557746],[24.885437,55.557766],[24.885299,55.557778],[24.885161,55.557777],[24.884996,55.55776],[24.884828,55.557736],[24.88468,55.557715],[24.884566,55.557691],[24.884462,55.557668],[24.884346,55.557647],[24.884214,55.55763],[24.884074,55.557605],[24.883922,55.557578],[24.883777,55.55755],[24.883624,55.557523],[24.883474,55.557494],[24.88332,55.557464],[24.883201,55.557434],[24.883094,55.557404],[24.882973,55.557373],[24.88284,55.55734],[24.8827,55.557308],[24.882555,55.55728],[24.882397,55.557257],[24.882254,55.557242],[24.882124,55.557231],[24.882012,55.557223],[24.88189,55.557213],[24.881762,55.557196],[24.881661,55.557185],[24.881572,55.557175],[24.881496,55.557174],[24.881427,55.557161],[24.881375,55.557127],[24.881333,55.557061],[24.881309,55.556964],[24.881308,55.556847],[24.881323,55.556719],[24.881342,55.556586],[24.881362,55.556445],[24.881389,55.556291],[24.881411,55.556143],[24.881411,55.555996],[24.881402,55.555846],[24.881384,55.555703],[24.881348,55.555552],[24.881292,55.555407],[24.881221,55.555262],[24.881129,55.555128],[24.881024,55.55501],[24.88091,55.554896],[24.880811,55.554794],[24.880719,55.554697],[24.880623,55.554603],[24.880521,55.554515],[24.880426,55.554436],[24.880337,55.554351],[24.880243,55.554257],[24.880152,55.554154],[24.880064,55.554039],[24.879984,55.553918],[24.879915,55.553797],[24.87986,55.55369],[24.879805,55.553566],[24.879752,55.55343],[24.879704,55.553281],[24.87966,55.553119],[24.87963,55.552969],[24.879611,55.552819],[24.879596,55.552673],[24.879587,55.552527],[24.879583,55.552398],[24.879579,55.552281],[24.879563,55.552165],[24.879531,55.552075],[24.879482,55.551995],[24.879423,55.551919],[24.879354,55.551868],[24.87926,55.551835],[24.879137,55.551815],[24.87901,55.551799],[24.878902,55.551789],[24.878822,55.551786],[24.878771,55.551785]]};
+
+const state = {
+  payMethod: null,
+  signature: null,
+  rider: { name: '', phone: '', bike: '', emergency: '' },
+  track: { points: [], startFinish: null, name: null, bounds: null },
+  session: { startTime: null, points: [], laps: 0, bestLap: null, lapStart: null, topSpeed: 0, distance: 0, timer: null, watchId: null, wakeLock: null, nearStartFinish: false, minLapTime: 30000, lastAccepted: null, smoothSpeed: 0, goodFixes: 0 }
+};
+
+// ============== GPS FILTER CONFIG ==============
+// Tunable thresholds for tracking accuracy. Adjust if the trail is too sparse
+// (loosen) or too noisy (tighten).
+const GPS_CFG = {
+  ACC_GATE: 35,        // metres: ignore any fix worse than this for trail/distance/speed
+  ACC_LAP: 25,         // metres: only count laps when the fix is at least this accurate
+  MIN_STEP: 3,         // metres: moves smaller than this are treated as stationary jitter
+  MAX_STEP_SPEED: 50,  // m/s (~180 km/h): a jump faster than this is a GPS teleport, reject it
+  SPEED_SMOOTH: 0.4,   // 0-1 exponential smoothing factor for the speed readout
+  MAX_PLAUSIBLE_KMH: 200 // hard ceiling on any single speed sample
+};
+
+// Auto-load the baked Mx Ride track on app start
+function loadBakedTrack() {
+  const points = BAKED_TRACK.points.map(p => ({ lat: p[0], lon: p[1] }));
+  const lats = points.map(p => p.lat);
+  const lons = points.map(p => p.lon);
+  applyTrack({
+    points,
+    name: 'Mx Ride',
+    bounds: { minLat: Math.min(...lats), maxLat: Math.max(...lats), minLon: Math.min(...lons), maxLon: Math.max(...lons) },
+    startFinish: points[0]
+  }, 'mx-ride.gpx');
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadBakedTrack();
+});
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function toast(msg, ms = 1800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), ms);
+}
+
+function haversine(a, b) {
+  const R = 6371000, toRad = (x) => x * Math.PI / 180;
+  const dLat = toRad(b.lat - a.lat), dLon = toRad(b.lon - a.lon);
+  const lat1 = toRad(a.lat), lat2 = toRad(b.lat);
+  const h = Math.sin(dLat/2)**2 + Math.sin(dLon/2)**2 * Math.cos(lat1) * Math.cos(lat2);
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+// ============== GPX ==============
+function parseGPX(xmlText) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlText, 'application/xml');
+  if (doc.querySelector('parsererror')) throw new Error('Invalid GPX file');
+  const points = [];
+  const trkpts = doc.querySelectorAll('trkpt');
+  if (trkpts.length > 0) {
+    trkpts.forEach(p => {
+      const lat = parseFloat(p.getAttribute('lat')), lon = parseFloat(p.getAttribute('lon'));
+      if (!isNaN(lat) && !isNaN(lon)) points.push({ lat, lon });
+    });
+  } else {
+    doc.querySelectorAll('rtept').forEach(p => {
+      const lat = parseFloat(p.getAttribute('lat')), lon = parseFloat(p.getAttribute('lon'));
+      if (!isNaN(lat) && !isNaN(lon)) points.push({ lat, lon });
+    });
+  }
+  if (points.length < 2) throw new Error('GPX has no usable track points');
+  let name = null;
+  const nameEl = doc.querySelector('trk > name, rte > name, metadata > name');
+  if (nameEl) name = nameEl.textContent.trim();
+  const lats = points.map(p => p.lat), lons = points.map(p => p.lon);
+  return {
+    points, name,
+    bounds: { minLat: Math.min(...lats), maxLat: Math.max(...lats), minLon: Math.min(...lons), maxLon: Math.max(...lons) },
+    startFinish: points[0]
+  };
+}
+
+function trackLengthKm(points) {
+  let d = 0;
+  for (let i = 1; i < points.length; i++) d += haversine(points[i-1], points[i]);
+  return d / 1000;
+}
+
+function handleGPXFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      applyTrack(parseGPX(e.target.result), file.name);
+    } catch (err) { toast('Could not load GPX: ' + err.message); }
+  };
+  reader.onerror = () => toast('Could not read file');
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function applyTrack(parsed, sourceLabel) {
+  state.track.points = parsed.points;
+  state.track.startFinish = parsed.startFinish;
+  state.track.bounds = parsed.bounds;
+  state.track.name = parsed.name || sourceLabel || 'Track';
+  const km = trackLengthKm(parsed.points);
+  document.getElementById('gpxStatus').textContent = `${state.track.name} · ${parsed.points.length} pts · ${km.toFixed(2)} km`;
+  document.getElementById('gpxStatus').classList.add('loaded');
+  document.getElementById('gpxClearBtn').style.display = 'inline-block';
+  toast('Track loaded');
+}
+
+function clearGPX() {
+  state.track = { points: [], startFinish: null, name: null, bounds: null };
+  document.getElementById('gpxStatus').textContent = 'No track loaded · free ride mode';
+  document.getElementById('gpxStatus').classList.remove('loaded');
+  document.getElementById('gpxClearBtn').style.display = 'none';
+  toast('Track cleared');
+}
+
+function loadSampleGPX() {
+  const cx = 25.0657, cy = 55.1713;
+  const points = [];
+  const steps = 64;
+  for (let i = 0; i <= steps; i++) {
+    const t = (i / steps) * Math.PI * 2;
+    const r1 = 0.0008 + Math.sin(t * 3) * 0.00015;
+    const r2 = 0.0005 + Math.cos(t * 2) * 0.0001;
+    points.push({ lat: cx + Math.sin(t) * r1, lon: cy + Math.cos(t) * r2 });
+  }
+  const lats = points.map(p => p.lat), lons = points.map(p => p.lon);
+  applyTrack({
+    points, name: 'Sample Track',
+    bounds: { minLat: Math.min(...lats), maxLat: Math.max(...lats), minLon: Math.min(...lons), maxLon: Math.max(...lons) },
+    startFinish: points[0]
+  }, 'sample.gpx');
+}
+
+// ============== PAY ==============
+function openPayModal(method) {
+  state.payMethod = method;
+  document.getElementById('payModalTitle').textContent = method === 'apple' ? 'Apple Pay' : 'Google Pay';
+  document.getElementById('payModal').classList.add('show');
+}
+function closePayModal() { document.getElementById('payModal').classList.remove('show'); }
+function confirmPay() {
+  closePayModal();
+  showScreen('screenProcessing');
+  setTimeout(() => { toast('Payment successful'); showScreen('screenWaiver'); initSignature(); }, 1400);
+}
+
+// ============== WAIVER ==============
+let sigCtx, sigDrawing = false, sigHasInk = false;
+
+function initSignature() {
+  const canvas = document.getElementById('sigCanvas');
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  sigCtx = canvas.getContext('2d');
+  sigCtx.scale(dpr, dpr);
+  sigCtx.strokeStyle = '#0a0a0a';
+  sigCtx.lineWidth = 2.2;
+  sigCtx.lineCap = 'round';
+  sigCtx.lineJoin = 'round';
+  const getPos = (e) => {
+    const r = canvas.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return { x: t.clientX - r.left, y: t.clientY - r.top };
+  };
+  const start = (e) => {
+    e.preventDefault();
+    sigDrawing = true;
+    if (!sigHasInk) {
+      sigHasInk = true;
+      document.getElementById('sigPlaceholder').classList.add('hidden');
+      document.getElementById('waiverBtn').disabled = false;
+    }
+    const p = getPos(e);
+    sigCtx.beginPath();
+    sigCtx.moveTo(p.x, p.y);
+  };
+  const move = (e) => {
+    if (!sigDrawing) return;
+    e.preventDefault();
+    const p = getPos(e);
+    sigCtx.lineTo(p.x, p.y);
+    sigCtx.stroke();
+  };
+  const end = () => { sigDrawing = false; };
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', start, { passive: false });
+  canvas.addEventListener('touchmove', move, { passive: false });
+  canvas.addEventListener('touchend', end);
+}
+
+function clearSignature() {
+  if (!sigCtx) return;
+  const canvas = document.getElementById('sigCanvas');
+  sigCtx.clearRect(0, 0, canvas.width, canvas.height);
+  sigHasInk = false;
+  document.getElementById('sigPlaceholder').classList.remove('hidden');
+  document.getElementById('waiverBtn').disabled = true;
+}
+
+function submitWaiver() {
+  state.signature = document.getElementById('sigCanvas').toDataURL('image/png');
+  toast('Waiver signed');
+  showScreen('screenInfo');
+}
+
+// ============== INFO ==============
+function submitInfo() {
+  state.rider.name = document.getElementById('riderName').value || 'Rider';
+  state.rider.phone = document.getElementById('riderPhone').value;
+  state.rider.bike = document.getElementById('riderBike').value || 'Bike';
+  state.rider.emergency = document.getElementById('riderEmergency').value;
+  if (!state.rider.name.trim() || state.rider.name === 'Rider') {
+    toast('Please enter your name');
+    return;
+  }
+  showScreen('screenRide');
+  startSession();
+}
+
+// ============== SESSION ==============
+function startSession() {
+  state.session.startTime = Date.now();
+  state.session.lapStart = Date.now();
+  state.session.points = [];
+  state.session.laps = 0;
+  state.session.distance = 0;
+  state.session.topSpeed = 0;
+  state.session.nearStartFinish = false;
+  state.session.lastAccepted = null;
+  state.session.smoothSpeed = 0;
+  state.session.goodFixes = 0;
+
+  const badge = document.getElementById('mapBadge');
+  badge.textContent = state.track.points.length > 0 ? state.track.name : 'Free ride';
+
+  if ('wakeLock' in navigator) {
+    navigator.wakeLock.request('screen').then(lock => { state.session.wakeLock = lock; }).catch(() => {});
+  }
+  state.session.timer = setInterval(updateTimer, 250);
+  if (navigator.geolocation) {
+    state.session.watchId = navigator.geolocation.watchPosition(onGPS, onGPSError, { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
+  } else {
+    onGPSError({ code: 0, message: 'No geolocation' });
+  }
+  initMap();
+}
+
+function updateTimer() {
+  if (!state.session.startTime) return;
+  const elapsed = Math.floor((Date.now() - state.session.startTime) / 1000);
+  document.getElementById('statTime').textContent = `${Math.floor(elapsed / 60)}:${(elapsed % 60).toString().padStart(2, '0')}`;
+}
+
+function onGPS(pos) {
+  const dot = document.getElementById('liveDot');
+  const acc = pos.coords.accuracy != null ? pos.coords.accuracy : 999;
+  const point = { lat: pos.coords.latitude, lon: pos.coords.longitude, t: Date.now(), speed: pos.coords.speed, acc };
+
+  // Always show the raw fix so the rider sees something is happening.
+  document.getElementById('gpsStatus').textContent =
+    `${point.lat.toFixed(5)}, ${point.lon.toFixed(5)} · ±${Math.round(acc)}m`;
+
+  // 1) ACCURACY GATE — a fix this coarse is noise, not movement. Show it as weak,
+  //    but never let it touch the trail, distance, speed, or lap counter.
+  if (acc > GPS_CFG.ACC_GATE) {
+    dot.classList.remove('error');
+    dot.classList.add('searching');
+    document.getElementById('liveText').textContent = `Weak GPS · ±${Math.round(acc)}m`;
+    return;
+  }
+
+  dot.classList.remove('searching', 'error');
+  state.session.goodFixes++;
+  document.getElementById('liveText').textContent = `Live · ±${Math.round(acc)}m`;
+
+  const pts = state.session.points;
+
+  // First good fix: seed the trail, nothing to measure yet.
+  if (pts.length === 0) {
+    pts.push(point);
+    state.session.lastAccepted = point;
+    drawMap();
+    return;
+  }
+
+  const last = state.session.lastAccepted || pts[pts.length - 1];
+  const d = haversine(last, point);
+  const dt = (point.t - last.t) / 1000;
+
+  // 2) TELEPORT REJECTION — a single bad fix that implies an impossible speed.
+  if (dt > 0 && (d / dt) > GPS_CFG.MAX_STEP_SPEED) {
+    return;
+  }
+
+  // 3) STATIONARY / JITTER FILTER — below MIN_STEP the rider isn't really moving,
+  //    so don't add distance or a near-duplicate trail point. Decay the speed to 0.
+  if (d < GPS_CFG.MIN_STEP) {
+    state.session.smoothSpeed *= (1 - GPS_CFG.SPEED_SMOOTH);
+    document.getElementById('statSpeed').textContent = Math.round(state.session.smoothSpeed);
+    detectLap(point);
+    drawMap();
+    return;
+  }
+
+  // Real movement: commit it.
+  state.session.distance += d;
+  pts.push(point);
+  state.session.lastAccepted = point;
+
+  // 4) SPEED — prefer the device's own Doppler speed when present (most accurate),
+  //    otherwise derive from filtered positions. Clamp, then smooth.
+  let kmh;
+  if (point.speed != null && point.speed >= 0) kmh = point.speed * 3.6;
+  else if (dt > 0) kmh = (d / dt) * 3.6;
+  else kmh = state.session.smoothSpeed;
+  if (kmh > GPS_CFG.MAX_PLAUSIBLE_KMH) kmh = state.session.smoothSpeed;
+
+  state.session.smoothSpeed = state.session.smoothSpeed * (1 - GPS_CFG.SPEED_SMOOTH) + kmh * GPS_CFG.SPEED_SMOOTH;
+  document.getElementById('statSpeed').textContent = Math.round(state.session.smoothSpeed);
+  if (state.session.smoothSpeed > state.session.topSpeed) state.session.topSpeed = state.session.smoothSpeed;
+
+  detectLap(point);
+  drawMap();
+}
+
+function detectLap(point) {
+  const now = Date.now();
+  // Only trust the start/finish crossing when the fix is tight enough; a coarse
+  // fix near the line causes phantom laps or misses real ones.
+  if (point && point.acc != null && point.acc > GPS_CFG.ACC_LAP) return;
+  if (state.track.startFinish) {
+    const distToSF = haversine(point, state.track.startFinish);
+    const enterRadius = 25, exitRadius = 50;
+    if (!state.session.nearStartFinish && distToSF < enterRadius) {
+      state.session.nearStartFinish = true;
+      const sinceLast = now - state.session.lapStart;
+      if (sinceLast > state.session.minLapTime) {
+        state.session.laps++;
+        const lapTime = Math.floor(sinceLast / 1000);
+        if (!state.session.bestLap || lapTime < state.session.bestLap) state.session.bestLap = lapTime;
+        state.session.lapStart = now;
+        document.getElementById('statLaps').textContent = state.session.laps;
+        document.getElementById('lapPill').textContent = `Lap ${state.session.laps}`;
+        toast(`Lap ${state.session.laps} · ${Math.floor(lapTime/60)}:${(lapTime%60).toString().padStart(2,'0')}`);
+      }
+    } else if (state.session.nearStartFinish && distToSF > exitRadius) {
+      state.session.nearStartFinish = false;
+    }
+  } else {
+    if (now - state.session.lapStart > 45000 && state.session.distance > (state.session.laps + 1) * 100) {
+      state.session.laps++;
+      const lapTime = Math.floor((now - state.session.lapStart) / 1000);
+      if (!state.session.bestLap || lapTime < state.session.bestLap) state.session.bestLap = lapTime;
+      state.session.lapStart = now;
+      document.getElementById('statLaps').textContent = state.session.laps;
+      document.getElementById('lapPill').textContent = `Lap ${state.session.laps}`;
+      toast(`Lap ${state.session.laps} complete`);
+    }
+  }
+}
+
+function onGPSError(err) {
+  const dot = document.getElementById('liveDot');
+  dot.classList.remove('searching');
+  dot.classList.add('error');
+  document.getElementById('liveText').textContent = 'No GPS';
+  document.getElementById('gpsStatus').textContent = err.message || 'GPS unavailable';
+  toast('GPS permission needed for tracking');
+}
+
+let mapCanvas, mapCtx;
+function initMap() {
+  mapCanvas = document.getElementById('liveMap');
+  const wrap = mapCanvas.parentElement;
+  const rect = wrap.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  mapCanvas.width = rect.width * dpr;
+  mapCanvas.height = rect.height * dpr;
+  mapCtx = mapCanvas.getContext('2d');
+  mapCtx.scale(dpr, dpr);
+  drawMap();
+}
+
+function drawMap() {
+  if (!mapCtx) return;
+  const dpr = window.devicePixelRatio || 1;
+  const w = mapCanvas.width / dpr, h = mapCanvas.height / dpr;
+
+  mapCtx.fillStyle = '#050505';
+  mapCtx.fillRect(0, 0, w, h);
+  mapCtx.strokeStyle = '#1a1a1a';
+  mapCtx.lineWidth = 0.5;
+  for (let x = 0; x < w; x += 24) { mapCtx.beginPath(); mapCtx.moveTo(x, 0); mapCtx.lineTo(x, h); mapCtx.stroke(); }
+  for (let y = 0; y < h; y += 24) { mapCtx.beginPath(); mapCtx.moveTo(0, y); mapCtx.lineTo(w, y); mapCtx.stroke(); }
+
+  const allLats = [], allLons = [];
+  if (state.track.points.length > 0) state.track.points.forEach(p => { allLats.push(p.lat); allLons.push(p.lon); });
+  if (state.session.points.length > 0) state.session.points.forEach(p => { allLats.push(p.lat); allLons.push(p.lon); });
+
+  if (allLats.length === 0) {
+    mapCtx.fillStyle = '#facc15';
+    mapCtx.font = "12px 'Barlow Condensed', sans-serif";
+    mapCtx.textAlign = 'center';
+    mapCtx.fillText('Waiting for GPS lock…', w/2, h/2);
+    return;
+  }
+
+  const minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
+  const minLon = Math.min(...allLons), maxLon = Math.max(...allLons);
+  const padLat = Math.max((maxLat - minLat) * 0.12, 0.00005);
+  const padLon = Math.max((maxLon - minLon) * 0.12, 0.00005);
+
+  const cosLat = Math.cos((minLat + maxLat) / 2 * Math.PI / 180);
+  const lonRange = (maxLon - minLon + 2 * padLon) * cosLat;
+  const latRange = (maxLat - minLat + 2 * padLat);
+  const scale = Math.min(w / lonRange, h / latRange) * 0.95;
+  const offsetX = (w - lonRange * scale) / 2;
+  const offsetY = (h - latRange * scale) / 2;
+
+  const project = (p) => ({
+    x: offsetX + ((p.lon - minLon + padLon) * cosLat) * scale,
+    y: h - offsetY - ((p.lat - minLat + padLat)) * scale
+  });
+
+  // GPX base layer
+  if (state.track.points.length > 0) {
+    mapCtx.fillStyle = 'rgba(250,204,21,0.08)';
+    mapCtx.beginPath();
+    state.track.points.forEach((p, i) => {
+      const xy = project(p);
+      if (i === 0) mapCtx.moveTo(xy.x, xy.y); else mapCtx.lineTo(xy.x, xy.y);
+    });
+    mapCtx.closePath();
+    mapCtx.fill();
+
+    mapCtx.strokeStyle = 'rgba(250,204,21,0.6)';
+    mapCtx.lineWidth = 1.5;
+    mapCtx.setLineDash([4, 4]);
+    mapCtx.beginPath();
+    state.track.points.forEach((p, i) => {
+      const xy = project(p);
+      if (i === 0) mapCtx.moveTo(xy.x, xy.y); else mapCtx.lineTo(xy.x, xy.y);
+    });
+    mapCtx.stroke();
+    mapCtx.setLineDash([]);
+
+    if (state.track.startFinish) {
+      const sf = project(state.track.startFinish);
+      mapCtx.strokeStyle = '#22c55e';
+      mapCtx.lineWidth = 2;
+      mapCtx.beginPath();
+      mapCtx.moveTo(sf.x - 8, sf.y - 8); mapCtx.lineTo(sf.x + 8, sf.y + 8);
+      mapCtx.moveTo(sf.x + 8, sf.y - 8); mapCtx.lineTo(sf.x - 8, sf.y + 8);
+      mapCtx.stroke();
+      mapCtx.fillStyle = '#22c55e';
+      mapCtx.font = "9px 'Barlow Condensed', sans-serif";
+      mapCtx.textAlign = 'left';
+      mapCtx.fillText('S/F', sf.x + 12, sf.y + 3);
+    }
+  }
+
+  // Live trail
+  if (state.session.points.length > 0) {
+    mapCtx.strokeStyle = '#ffffff';
+    mapCtx.lineWidth = 2.5;
+    mapCtx.lineCap = 'round';
+    mapCtx.lineJoin = 'round';
+    mapCtx.beginPath();
+    state.session.points.forEach((p, i) => {
+      const xy = project(p);
+      if (i === 0) mapCtx.moveTo(xy.x, xy.y); else mapCtx.lineTo(xy.x, xy.y);
+    });
+    mapCtx.stroke();
+
+    const last = state.session.points[state.session.points.length - 1];
+    const lastXY = project(last);
+    mapCtx.fillStyle = 'rgba(250,204,21,0.3)';
+    mapCtx.beginPath();
+    mapCtx.arc(lastXY.x, lastXY.y, 14, 0, Math.PI * 2);
+    mapCtx.fill();
+    mapCtx.fillStyle = '#facc15';
+    mapCtx.strokeStyle = '#0a0a0a';
+    mapCtx.lineWidth = 1.5;
+    mapCtx.beginPath();
+    mapCtx.arc(lastXY.x, lastXY.y, 6, 0, Math.PI * 2);
+    mapCtx.fill();
+    mapCtx.stroke();
+  }
+}
+
+// ============== SOS ==============
+function triggerSOS() { document.getElementById('sosModal').classList.add('show'); }
+function closeSOS() { document.getElementById('sosModal').classList.remove('show'); }
+function confirmSOS() {
+  closeSOS();
+  toast('SOS sent · staff alerted', 3000);
+  const dot = document.getElementById('liveDot');
+  dot.classList.add('error');
+  document.getElementById('liveText').textContent = 'SOS · Help on way';
+}
+
+// ============== END ==============
+function endSession() {
+  if (state.session.timer) clearInterval(state.session.timer);
+  if (state.session.watchId !== null && navigator.geolocation) navigator.geolocation.clearWatch(state.session.watchId);
+  if (state.session.wakeLock) { state.session.wakeLock.release().catch(() => {}); state.session.wakeLock = null; }
+
+  const elapsed = Math.floor((Date.now() - state.session.startTime) / 1000);
+  document.getElementById('summaryName').textContent = state.rider.name.split(' ')[0];
+  document.getElementById('sumDuration').textContent = `${Math.floor(elapsed / 60)}:${(elapsed % 60).toString().padStart(2, '0')}`;
+  document.getElementById('sumLaps').textContent = state.session.laps;
+  document.getElementById('sumBest').textContent = state.session.bestLap
+    ? `${Math.floor(state.session.bestLap / 60)}:${(state.session.bestLap % 60).toString().padStart(2, '0')}`
+    : '—';
+  document.getElementById('sumDist').textContent = `${(state.session.distance / 1000).toFixed(2)} km`;
+  document.getElementById('sumTop').textContent = `${Math.round(state.session.topSpeed)} km/h`;
+  showScreen('screenSummary');
+}
+
+// ============== GPX EXPORT ==============
+function downloadGPX() {
+  const pts = state.session.points;
+  if (!pts || pts.length < 2) {
+    toast('No track recorded to export');
+    return;
+  }
+  const esc = (s) => String(s).replace(/[<>&'"]/g, c => ({ '<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;' }[c]));
+  const riderName = state.rider.name && state.rider.name !== 'Rider' ? state.rider.name : 'Rider';
+  const trackName = `Mx Ride session · ${riderName}`;
+  const trkpts = pts.map(p => {
+    const time = new Date(p.t).toISOString();
+    let s = `      <trkpt lat="${p.lat.toFixed(7)}" lon="${p.lon.toFixed(7)}">\n        <time>${time}</time>\n`;
+    if (p.speed != null && p.speed >= 0) s += `        <extensions><speed>${p.speed.toFixed(2)}</speed></extensions>\n`;
+    s += `      </trkpt>`;
+    return s;
+  }).join('\n');
+
+  const gpx = `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Mx Ride" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>${esc(trackName)}</name>
+    <time>${new Date(state.session.startTime || Date.now()).toISOString()}</time>
+  </metadata>
+  <trk>
+    <name>${esc(trackName)}</name>
+    <trkseg>
+${trkpts}
+    </trkseg>
+  </trk>
+</gpx>`;
+
+  const d = new Date(state.session.startTime || Date.now());
+  const pad = (n) => String(n).padStart(2, '0');
+  const stamp = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
+  const safeName = riderName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'rider';
+
+  const blob = new Blob([gpx], { type: 'application/gpx+xml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `mxride-${safeName}-${stamp}.gpx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast('GPX downloaded');
+}
+
+function resetApp() {
+  state.payMethod = null;
+  state.signature = null;
+  state.rider = { name: '', phone: '', bike: '', emergency: '' };
+  state.session = { startTime: null, points: [], laps: 0, bestLap: null, lapStart: null, topSpeed: 0, distance: 0, timer: null, watchId: null, wakeLock: null, nearStartFinish: false, minLapTime: 30000, lastAccepted: null, smoothSpeed: 0, goodFixes: 0 };
+  document.getElementById('riderName').value = '';
+  document.getElementById('riderPhone').value = '';
+  document.getElementById('riderBike').value = '';
+  document.getElementById('riderEmergency').value = '';
+  clearSignature();
+  showScreen('screenPay');
+}
+</script>
+
+</body>
+</html>
